@@ -1,6 +1,9 @@
 #pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -25,10 +28,6 @@ namespace KHAS {
         void processInput() noexcept;
         void showErrors() noexcept;
 
-
-        template <typename Shader>
-        inline bool deleteShader(Shader&& shader) noexcept;
-
         static void display_callbck(GLFWwindow* window, int width, int height);
     private:
         int window_width_{};
@@ -37,6 +36,12 @@ namespace KHAS {
         GLFWwindow* window_p_{};
         bool is_init_{};
         std::vector<std::string> log_errors_;
+        float overlay_{};
+        float x_{};
+        float y_{};
+        float z_{};
+        float speed_{};
+
     };
 
 

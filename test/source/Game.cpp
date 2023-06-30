@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Texture.h"
 #include "Shader.h"
+#include "Keyboard.h"
 #include <fstream>
 
 #include <stb/stb_image.h>
@@ -11,6 +12,11 @@ namespace KHAS {
 		, window_height_{ height }
 		, window_name_{ window_name }
 		, window_p_{ nullptr }
+		, overlay_{0.5f}
+		, x_{0.0f}
+		, y_{0.0f}
+		, z_{0.0f}
+		, speed_{0.1f}
 	{
 		init();
 		if (is_init_) loop();
@@ -35,6 +41,8 @@ namespace KHAS {
 
 		glViewport(0, 0, window_width_, window_height_);
 		glfwSetFramebufferSizeCallback(window_p_, Game::display_callbck);
+		glfwSetKeyCallback(window_p_, Keyboard::keyCallback);
+
 
 		is_init_ = true;
 	}
@@ -124,7 +132,6 @@ namespace KHAS {
 		shader.setInt("texture_background", 0);
 		shader.setInt("texture_ship", 1);
 		auto start_time{ glfwGetTime() };
-
 		while (!glfwWindowShouldClose(window_p_))
 		{
 			/* input processing */
@@ -139,13 +146,19 @@ namespace KHAS {
 			glBindTexture(GL_TEXTURE_2D, ship.getID());
 
 
-			//glm::mat4 trans{ glm::mat4(1.0f) };
-			//trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-			//trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 model{ glm::mat4(1.0f) };
+			glm::mat4 view{ glm::mat4(1.0f) };
+			glm::mat4 projection{ glm::mat4(1.0f) };
+
+			//model = glm::rotate(model, (float)start_time * glm::radians(-55.0f), glm::vec3(0.5f));
+			view = glm::translate(view, glm::vec3(-x_, -y_, -z_));
+			//projection = glm::perspective(glm::radians(45.0f), (float)window_width_ / (float)window_height_, 0.1f, 100.0f);
 
 			shader.use();
-			//unsigned int transformLoc = glGetUniformLocation(shader.getId().value(), "transform");
-			//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+			shader.setMat4("model", model);
+			shader.setMat4("view", view);
+			shader.setMat4("projection", projection);
+			shader.setfloat("overlay", overlay_);
 
 
 			glBindVertexArray(VAO);
@@ -167,8 +180,32 @@ namespace KHAS {
 
 	void Game::processInput() noexcept
 	{
-		if (glfwGetKey(window_p_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window_p_, true);
+
+		if(Keyboard::key(GLFW_KEY_ESCAPE)) glfwSetWindowShouldClose(window_p_, true);
+
+		if (Keyboard::keyWentUp(GLFW_KEY_UP)) {
+			overlay_ += speed_;
+			if (overlay_ > 1.0f) overlay_ = 1.0f;
+		}
+		else if (Keyboard::keyWentDown(GLFW_KEY_DOWN)) {
+			overlay_ -= speed_;
+			if (overlay_ < 0.0f) overlay_ = 0.0f;
+		}
+
+		if (Keyboard::key(GLFW_KEY_W)) {
+			y_ -= speed_;
+		}
+		else if (Keyboard::key(GLFW_KEY_S)) {
+			y_ += speed_;
+		}
+		if (Keyboard::key(GLFW_KEY_A)) {
+			x_ += speed_;
+		}
+		else if (Keyboard::key(GLFW_KEY_D)) {
+			x_ -= speed_;
+		}
+
+
 	}
 
 	void Game::showErrors() noexcept
@@ -177,9 +214,6 @@ namespace KHAS {
 		std::ofstream out{ "error_log.txt", std::ios::out };
 		for (auto&& elem : log_errors_) {
 			out << elem << "\n";
-#ifdef NDEBUG
-			std::cerr << elem << std::endl;
-#endif
 		}
 		out << std::endl;
 	}

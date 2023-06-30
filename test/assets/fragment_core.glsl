@@ -8,9 +8,11 @@ in vec2 TexCoordShip;
 uniform sampler2D texture_background;
 uniform sampler2D texture_ship;
 
+uniform float overlay;
+
 void main()
 {
-	FragColor = mix(texture(texture_background, TexCoordBackground), texture(texture_ship, TexCoordShip), 0.4);
+	FragColor = mix(texture(texture_background, TexCoordBackground), texture(texture_ship, TexCoordShip), overlay);
 	//FragColor = texture(texture1, TexCoord);
 	//FragColor = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 
